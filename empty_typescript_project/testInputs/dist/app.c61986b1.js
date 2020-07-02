@@ -48734,8 +48734,239 @@ Object.defineProperty(exports, "__esModule", {
 var PIXI = __importStar(require("pixi.js"));
 
 var app = new PIXI.Application({
-  backgroundColor: 0x1099bb
+  backgroundColor: 0x1099bb,
+  width: 800,
+  height: 608
 });
+var background = PIXI.Sprite.from('Images/Background.png');
+var Wyvern_Head = PIXI.Sprite.from('Images/Wyvern_Head.png');
+var food = PIXI.Sprite.from("Images/Soul_of_Flight/tile000.png");
+document.body.appendChild(app.view);
+document.addEventListener('keydown', keyPressed);
+background.width = app.screen.width;
+background.height = app.screen.height;
+app.stage.addChild(background);
+var gameOn = false;
+var onlyAtStart = false;
+var xspeed = 32;
+var yspeed = 0;
+var seconds = 0;
+var score = 0;
+var totalBody = 1;
+var totalBodies = [];
+StartGame();
+
+function StartGame() {
+  if (onlyAtStart == false) {
+    Wyvern_Head.anchor.set(0.5);
+    app.stage.addChild(Wyvern_Head);
+    food.anchor.set(0.5);
+    app.stage.addChild(food);
+    totalBodies.push(Wyvern_Head);
+    SpawnWall();
+  }
+
+  Wyvern_Head.x = 192;
+  Wyvern_Head.y = 288;
+  Wyvern_Head.rotation = 3.12;
+  xspeed = 32;
+  yspeed = 0;
+  SpawnFood();
+  AddBody();
+  gameOn = true;
+  onlyAtStart = true;
+}
+
+app.ticker.add(function (delta) {
+  seconds += 1 / 60 * delta;
+
+  if (seconds >= 0.2) {
+    if (gameOn == true) {
+      ActiveGame();
+    }
+
+    seconds = 0;
+  }
+});
+
+function ActiveGame() {
+  if (totalBody === totalBodies.length) {
+    for (var i = 0; i < totalBodies.length - 1; i++) {
+      if (i != 0) {
+        totalBodies[i].x = totalBodies[i + 1].x;
+        totalBodies[i].y = totalBodies[i + 1].y;
+        totalBodies[i].rotation = totalBodies[i + 1].rotation;
+      }
+    }
+  }
+
+  totalBodies[totalBody - 1].x = Wyvern_Head.x;
+  totalBodies[totalBody - 1].y = Wyvern_Head.y;
+  totalBodies[totalBody - 1].rotation = Wyvern_Head.rotation;
+  Wyvern_Head.x += xspeed;
+  Wyvern_Head.y += yspeed;
+
+  if (Eat()) {
+    score + 1;
+    AddBody();
+    SpawnFood();
+  }
+
+  Die();
+}
+
+function AddBody() {
+  var Wyvern_Tail = PIXI.Texture.from('Images/Wyvern_Tail.png');
+  var bodyImage = PIXI.Texture.from('Images/Wyvern_Body.png');
+  var Wyvern_Body = new PIXI.Sprite(bodyImage);
+
+  if (totalBody == 1) {
+    Wyvern_Body.texture = Wyvern_Tail;
+  }
+
+  Wyvern_Body.x = -100;
+  Wyvern_Body.anchor.set(0.5);
+  app.stage.addChild(Wyvern_Body);
+  totalBodies.push(Wyvern_Body);
+  totalBody++;
+}
+
+function TurnSnake(thisWay) {
+  if (thisWay == "Left") {
+    xspeed = -32;
+    yspeed = 0;
+    Wyvern_Head.rotation = 0;
+  }
+
+  if (thisWay == "Down") {
+    xspeed = 0;
+    yspeed = 32;
+    Wyvern_Head.rotation = 4.71;
+  }
+
+  if (thisWay == "Up") {
+    xspeed = 0;
+    yspeed = -32;
+    Wyvern_Head.rotation = 1.57;
+  }
+
+  if (thisWay == "Right") {
+    xspeed = 32;
+    yspeed = 0;
+    Wyvern_Head.rotation = 3.12;
+  }
+}
+
+function keyPressed(event) {
+  if (gameOn == true) {
+    if (event.keyCode == 65) {
+      TurnSnake("Left");
+    }
+
+    if (event.keyCode == 83) {
+      TurnSnake("Down");
+    }
+
+    if (event.keyCode == 87) {
+      TurnSnake("Up");
+    }
+
+    if (event.keyCode == 68) {
+      TurnSnake("Right");
+    }
+  }
+
+  if (event.keyCode == 82) {
+    Restart();
+  }
+}
+
+function SpawnFood() {
+  food.x = getRandomNumber(24) * 32;
+  food.y = getRandomNumber(19) * 32;
+
+  if (food.x == 0 || food.y == 0) {
+    SpawnFood();
+  }
+
+  for (var i = totalBodies.length; i < 0; i++) {
+    if (food.x == totalBodies[i].x && food.y == totalBodies[i].y) {
+      SpawnFood();
+    }
+  }
+}
+
+function Eat() {
+  if (Wyvern_Head.x == food.x && Wyvern_Head.y == food.y) {
+    return true;
+  }
+}
+
+function getRandomNumber(max) {
+  return Math.floor(Math.random() * Math.floor(max));
+}
+
+function SpawnWall() {
+  for (var i = 0; i < 50; i++) {
+    var Wallblock = PIXI.Sprite.from('Images/Stone_Block.png');
+    Wallblock.anchor.set(0.5);
+    Wallblock.x = 16 * i + 8;
+    Wallblock.y = 8;
+    app.stage.addChild(Wallblock);
+  }
+
+  for (var i = 0; i < 50; i++) {
+    var _Wallblock = PIXI.Sprite.from('Images/Stone_Block.png');
+
+    _Wallblock.anchor.set(0.5);
+
+    _Wallblock.x = 16 * i + 8;
+    _Wallblock.y = 16 * 37 + 8;
+    app.stage.addChild(_Wallblock);
+  }
+
+  for (var i = 0; i < 40; i++) {
+    var _Wallblock2 = PIXI.Sprite.from('Images/Stone_Block.png');
+
+    _Wallblock2.anchor.set(0.5);
+
+    _Wallblock2.x = 8;
+    _Wallblock2.y = 16 * i + 8;
+    app.stage.addChild(_Wallblock2);
+  }
+
+  for (var i = 0; i < 40; i++) {
+    var _Wallblock3 = PIXI.Sprite.from('Images/Stone_Block.png');
+
+    _Wallblock3.anchor.set(0.5);
+
+    _Wallblock3.x = 16 * 49 + 8;
+    _Wallblock3.y = 16 * i + 8;
+    app.stage.addChild(_Wallblock3);
+  }
+}
+
+function Die() {
+  for (var i = 0; i < totalBodies.length - 1; i++) {
+    if (Wyvern_Head.x == totalBodies[i + 1].x && Wyvern_Head.y == totalBodies[i + 1].y) {
+      gameOn = false;
+    }
+  }
+
+  if (Wyvern_Head.x >= 800 || Wyvern_Head.x <= 0) {
+    gameOn = false;
+  }
+
+  if (Wyvern_Head.y >= 608 || Wyvern_Head.y <= 0) {
+    gameOn = false;
+  }
+}
+
+function Restart() {
+  score = 0;
+  totalBody = 1;
+  StartGame();
+}
 },{"pixi.js":"../node_modules/pixi.js/lib/pixi.es.js"}],"../node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
@@ -48764,7 +48995,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "60130" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "50456" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
